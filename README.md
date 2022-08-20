@@ -4,7 +4,7 @@
 # 🪆 Combine
 *A game for the Bevy game jam*
 
-<--<img src="https://user-images.githubusercontent.com/20546772/184515793-9f7dea0d-ff21-45ba-9869-49804094e237.png" width="756px" height="600px"/> -->
+<img src="https://user-images.githubusercontent.com/20546772/184515793-9f7dea0d-ff21-45ba-9869-49804094e237.png" width="756px" height="600px" style="display:none;" />
 
 </div>
 
