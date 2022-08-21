@@ -1,16 +1,36 @@
 use bevy::prelude::*;
 
-pub const LAUNCHER_TITLE: &str = "Bevy Shell - Template";
+/** Global game constants */
+pub const CLEAR: Color = Color::rgb(0.2,0.1,0.1);
+pub const LAUNCHER_TITLE: &str = "Combine";
+pub const RATIO: f32 = 0.1;
+
+/** Modules */
+mod debug;
+
+use debug::DebugPlugin;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub enum GameState {
+    MainMenu,
+    Playing,
+    GameOver,
+    PauseMenu,
+}
 
 pub fn app() -> App {
     let mut app = App::new();
-    app.insert_resource(WindowDescriptor {
+    app
+    .add_state(GameState::MainMenu)
+    .insert_resource(ClearColor(CLEAR))
+    .insert_resource(WindowDescriptor {
         title: LAUNCHER_TITLE.to_string(),
         canvas: Some("#bevy".to_string()),
         fit_canvas_to_parent: true,
         ..Default::default()
     })
     .add_plugins(DefaultPlugins)
+    .add_plugin(DebugPlugin)
     .add_startup_system(load_icon);
     app
 }
