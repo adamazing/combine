@@ -301,28 +301,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_asset_loader"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91275716531c98d9907ee8c57854d11e3688780a9cefc66b1d4da601a3e3c41e"
-dependencies = [
- "anyhow",
- "bevy",
- "bevy_asset_loader_derive",
-]
-
-[[package]]
-name = "bevy_asset_loader_derive"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e721755806423f711c0934295872808adb20d379b3073c679ed544960fc84b6d"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "bevy_audio"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1191,9 +1169,9 @@ name = "combine-game"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_rapier2d",
  "bevy-inspector-egui",
  "bevy_ecs_ldtk",
+ "bevy_rapier2d",
  "image 0.24.3",
  "winit",
 ]
@@ -2495,6 +2473,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "matches"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
+
+[[package]]
 name = "matrixmultiply"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2502,12 +2486,6 @@ checksum = "add85d4dd35074e6fedc608f8c8f513a3548619a9024b751949ef0e8e45a4d84"
 dependencies = [
  "rawpointer",
 ]
-
-[[package]]
-name = "matches"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
 name = "memchr"
@@ -2626,7 +2604,7 @@ dependencies = [
  "matrixmultiply",
  "nalgebra-macros",
  "num-complex",
- "num-rational",
+ "num-rational 0.4.1",
  "num-traits",
  "simba",
  "typenum",
