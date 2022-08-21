@@ -1040,6 +1040,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "combine-game"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "image",
+ "winit",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "1.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2263,15 +2272,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "my-game"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "image",
- "winit",
-]
-
-[[package]]
 name = "naga"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2307,8 +2307,8 @@ name = "native-launcher"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "combine-game",
  "image",
- "my-game",
  "winit",
 ]
 
@@ -3471,7 +3471,7 @@ name = "wasm-launcher"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "my-game",
+ "combine-game",
  "stylist",
  "web-sys",
  "yew",
