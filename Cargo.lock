@@ -1171,6 +1171,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_ecs_ldtk",
+ "bevy_egui",
  "bevy_rapier2d",
  "image 0.24.3",
  "winit",
