@@ -17,6 +17,7 @@ fn set_global_css() {
     global_style! {
         r#"
         html {
+            background-color: #94aed6;
             min-height: 100%;
             position: relative;
         }
