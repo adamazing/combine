@@ -22,5 +22,9 @@ lto = true
 
 [dependencies]
 bevy = "0.8.0"
+bevy_rapier2d = "0.16.1"
 image = "0.24.3"
 winit = "0.26.1"
+bevy-inspector-egui = "0.12.1"
+bevy_ecs_ldtk = "0.4.0"
+bevy_egui = "0.15.1"
