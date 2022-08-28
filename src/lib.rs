@@ -14,22 +14,24 @@ pub const RATIO: f32 = 0.1;
 
 /** Modules */
 mod assets;
-mod debug;
-mod statemanagement;
-mod level;
-mod player;
-mod paused;
-mod helpers;
-mod music;
 mod camera;
+mod debug;
+mod helpers;
+mod level;
+mod music;
+mod paused;
+mod platforms;
+mod player;
+mod statemanagement;
 
 use assets::AssetPlugin;
+use camera::CameraPlugin;
 use debug::DebugPlugin;
+use level::LevelManagerPlugin;
 use music::MusicPlugin;
 use paused::PausePlugin;
-use camera::CameraPlugin;
-use statemanagement::{GameState,PauseState};
 use player::PlayerPlugin;
+use statemanagement::{GameState,PauseState};
 
 pub fn app() -> App {
     let mut app = App::new();
@@ -53,6 +55,7 @@ pub fn app() -> App {
     .add_plugin(DebugPlugin)
     .add_plugin(MusicPlugin)
     .add_plugin(PlayerPlugin)
+    .add_plugin(LevelManagerPlugin)
     .add_plugin(PausePlugin)
     // .register_ldtk_entity::<MyBundle>("MyEntityIdentifier")
     .add_startup_system(setup)

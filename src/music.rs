@@ -17,7 +17,7 @@ impl Plugin for MusicPlugin {
 fn start_gameplay_background_music(audio_assets: Res<AudioAssets>, audio: Res<Audio>) {
     debug!("Playing music");
     audio.play(audio_assets.music.clone());
-    audio.set_volume(0.2);
+    audio.set_volume(0.25);
 }
 
 fn stop_gameplay_background_music(audio: Res<Audio>) {

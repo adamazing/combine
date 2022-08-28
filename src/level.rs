@@ -1,7 +1,8 @@
 use iyes_loopless::prelude::*;
-use bevy_ecs_ldtk::*;
+use bevy_ecs_ldtk::prelude::*;
 use bevy::prelude::*;
 
+use crate::player::Player;
 use crate::{GameState, PauseState};
 use crate::assets::*;
 
@@ -30,13 +31,14 @@ fn spawn_level(mut commands:Commands, level: Res<LevelsAsset>) {
     });
 }
 
-fn update_level_selection(level_query: Query<(&Handle<LdtkLevel>,&Transform)/*, Without<Player>*/>,
-                          player_query: Query<&Transform/*, With<Player>*/>,
+fn update_level_selection(level_query: Query<(&Handle<LdtkLevel>,&Transform), Without<Player>>,
+                          player_query: Query<&Transform, With<Player>>,
                           mut level_selection: ResMut<LevelSelection>,
                           ldtk_levels: Res<Assets<LdtkLevel>>) {
     for (level_handle, level_transform) in &level_query {
-        info!("{:?}", level_handle);
+        debug!("{:?}", level_handle);
         if let Some(ldtk_level) = ldtk_levels.get(level_handle) {
+            debug!("Got a level");
             for player_transform in &player_query {
                 if player_transform.translation.x
                     < level_transform.translation.x + ldtk_level.level.px_wid as f32

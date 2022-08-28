@@ -39,6 +39,10 @@ struct PlayerBundle {
     collider: PlayerColliderBundle,
 
     #[bundle]
+    #[sprite_sheet_bundle]
+    sprite_bundle: SpriteSheetBundle,
+
+    #[bundle]
     input_manager: PlayerInput,
 }
 
@@ -110,13 +114,15 @@ impl Default for PlayerInput {
 
 fn player_movement(mut player_query: Query<(&mut Velocity, &ActionState<PlayerAction>),
                    (With<Player>, Changed<ActionState<PlayerAction>>),>) {
-    debug!("Player movement");
+
     for (mut vel, action_state) in &mut player_query {
         if action_state.pressed(PlayerAction::Left) {
             vel.linvel.x = -100.0;
+            info!("Player movement: left");
         }
         if action_state.pressed(PlayerAction::Right) {
             vel.linvel.x = 100.0;
+            info!("Player movement: right");
         }
     }
 }
@@ -134,7 +140,7 @@ fn player_animation(mut _player_query: Query<
                     With<Player>>,
                     mut _timer: Local<AnimationTimer>,
                     _time: Res<Time>) {
-    info!("Animation not implemented");
+    // info!("Animation not implemented");
 }
 
 

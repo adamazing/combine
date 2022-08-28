@@ -26,7 +26,6 @@ enum PauseMenuAction {
 }
 
 fn spawn_pause_menu(mut commands: Commands, font_assets: Res<FontAssets>) {
-    info!("Not implemented: spawn_pause_menu");
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
