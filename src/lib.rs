@@ -1,44 +1,69 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::camera::{DepthCalculation, ScalingMode, WindowOrigin}, window::WindowMode};
+use bevy_ecs_ldtk::prelude::*;
+use bevy_kira_audio::AudioPlugin;
+pub use iyes_loopless::prelude::*;
+// use bevy_rapier2d::prelude::*;
+// use bevy_kira_audio::*;
+// use leafwing_input_manager::prelude::*;
+pub use bevy_asset_loader::prelude::*;
 
 /** Global game constants */
-pub const CLEAR: Color = Color::rgb(0.2,0.1,0.1);
+pub const CLEAR: Color = Color::rgb((148f32/256f32) *1.0, (174f32/256f32) * 1.0, (214f32/256f32) * 1.0);
 pub const LAUNCHER_TITLE: &str = "Combine";
 pub const RATIO: f32 = 0.1;
 
 /** Modules */
+mod assets;
+mod camera;
 mod debug;
+mod helpers;
+mod level;
+mod music;
+mod paused;
+mod platforms;
+mod player;
+mod statemanagement;
 
+use assets::AssetPlugin;
+use camera::CameraPlugin;
 use debug::DebugPlugin;
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
-pub enum GameState {
-    MainMenu,
-    Playing,
-    GameOver,
-    PauseMenu,
-}
+use level::LevelManagerPlugin;
+use music::MusicPlugin;
+use paused::PausePlugin;
+use player::PlayerPlugin;
+use statemanagement::{GameState,PauseState};
 
 pub fn app() -> App {
     let mut app = App::new();
     app
-    .add_state(GameState::MainMenu)
-    .insert_resource(ClearColor(CLEAR))
+    .add_loopless_state(GameState::Loading)
+    .add_loopless_state(PauseState::UnPaused)
     .insert_resource(WindowDescriptor {
         title: LAUNCHER_TITLE.to_string(),
         canvas: Some("#bevy".to_string()),
         fit_canvas_to_parent: true,
+        resizable: false,
+        mode: WindowMode::BorderlessFullscreen,
         ..Default::default()
     })
+    .insert_resource(ClearColor(CLEAR))
     .add_plugins(DefaultPlugins)
+    .add_plugin(LdtkPlugin)
+    .add_plugin(AssetPlugin)
+    .add_plugin(AudioPlugin)
+    .add_plugin(CameraPlugin)
     .add_plugin(DebugPlugin)
-    .add_startup_system(load_icon);
+    .add_plugin(MusicPlugin)
+    .add_plugin(PlayerPlugin)
+    .add_plugin(LevelManagerPlugin)
+    .add_plugin(PausePlugin)
+    // .register_ldtk_entity::<MyBundle>("MyEntityIdentifier")
+    .add_startup_system(setup)
+    ;
     app
 }
 
-fn load_icon(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn_bundle(Camera2dBundle::default());
-    commands.spawn_bundle(SpriteBundle {
-        texture: asset_server.load("bevy.png"),
-        ..default()
-    });
+fn setup(mut _commands:Commands, _asset_server: Res<AssetServer> ) {
+    debug!("Setting up");
 }
+
