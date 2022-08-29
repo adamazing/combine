@@ -12,6 +12,7 @@ impl Plugin for PausePlugin {
             .add_enter_system(PauseState::Paused, spawn_pause_menu)
             .add_exit_system(PauseState::Paused, despawn_entities_with::<PauseMenuItem>)
             .add_startup_system(spawn_pause_menu_detector)
+            .add_system(exit_game.run_in_state(PauseState::Paused))
             .add_system(change_pause_state.run_in_state(GameState::GamePlaying));
     }
 }
@@ -22,6 +23,7 @@ struct PauseMenuItem;
 #[derive(Actionlike, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum PauseMenuAction {
     Close,
+    ExitGame,
     Open
 }
 
@@ -90,6 +92,27 @@ fn spawn_pause_menu(mut commands: Commands, font_assets: Res<FontAssets>) {
                 ),
                 ..default()
             });
+            parent.spawn_bundle(TextBundle {
+                style: Style {
+                    align_self: AlignSelf::Center,
+                    margin: UiRect {
+                        top: Val::Px(0.0),
+                        left: Val::Auto,
+                        bottom: Val::Px(0.0),
+                        right: Val::Auto,
+                    },
+                    ..default()
+                },
+                text: Text::from_section(
+                    "Press Q to exit game".to_string(),
+                    TextStyle {
+                        font: font_assets.baloo.clone(),
+                        font_size: 40.0,
+                        color: Color::WHITE,
+                    },
+                ),
+                ..default()
+            });
         })
         .insert(PauseMenuItem);
 }
@@ -99,9 +122,18 @@ fn spawn_pause_menu_detector(mut commands: Commands) {
         input_map: InputMap::new([
                                  (KeyCode::Escape, PauseMenuAction::Open),
                                  (KeyCode::Return, PauseMenuAction::Close),
+                                 (KeyCode::Q, PauseMenuAction::ExitGame),
         ]),
         action_state: ActionState::default(),
     });
+}
+
+fn exit_game(action_query: Query<&ActionState<PauseMenuAction>>, current_state: Res<CurrentState<PauseState>>) {
+    for action in &action_query {
+        if action.pressed(PauseMenuAction::ExitGame) && matches!(current_state.0, PauseState::Paused) {
+            std::process::exit(0);
+        }
+    }
 }
 
 fn change_pause_state(mut commands: Commands, action_query: Query<&ActionState<PauseMenuAction>>, current_state: Res<CurrentState<PauseState>>) {

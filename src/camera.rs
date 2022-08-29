@@ -1,9 +1,9 @@
 use iyes_loopless::prelude::*;
 
-use bevy::{prelude::*, render::camera::{DepthCalculation, ScalingMode, WindowOrigin}, window::WindowMode};
+use bevy::{prelude::*, render::camera::{DepthCalculation, ScalingMode, WindowOrigin}};
 use bevy_ecs_ldtk::{LevelSelection, LevelSpawnBehavior, SetClearColor, LdtkSettings, LdtkLevel};
 
-use crate::{statemanagement::{GameState, PauseState}, player::{PlayerPlugin, Player}};
+use crate::{statemanagement::{GameState, PauseState}, player::Player};
 
 pub struct CameraPlugin;
 

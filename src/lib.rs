@@ -1,10 +1,8 @@
-use bevy::{prelude::*, render::camera::{DepthCalculation, ScalingMode, WindowOrigin}, window::WindowMode};
+use bevy::{prelude::*, window::WindowMode};
 use bevy_ecs_ldtk::prelude::*;
 use bevy_kira_audio::AudioPlugin;
 pub use iyes_loopless::prelude::*;
-// use bevy_rapier2d::prelude::*;
-// use bevy_kira_audio::*;
-// use leafwing_input_manager::prelude::*;
+use heron::prelude::*;
 pub use bevy_asset_loader::prelude::*;
 
 /** Global game constants */
@@ -49,6 +47,8 @@ pub fn app() -> App {
     .insert_resource(ClearColor(CLEAR))
     .add_plugins(DefaultPlugins)
     .add_plugin(LdtkPlugin)
+    .add_plugin(PhysicsPlugin::default())
+    .insert_resource(Gravity::from(Vec3::new(0.0,-9.81,0.0)))
     .add_plugin(AssetPlugin)
     .add_plugin(AudioPlugin)
     .add_plugin(CameraPlugin)
