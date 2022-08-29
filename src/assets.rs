@@ -34,6 +34,9 @@ pub struct FontAssets {
 pub struct AudioAssets{
     #[asset(path = "audio/music/joshua-mclean_50s-bit.ogg")]
     pub music: Handle<AudioSource>,
+
+    #[asset(path = "audio/music/Retro_Beat.ogg")]
+    pub pause_music: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection)]
