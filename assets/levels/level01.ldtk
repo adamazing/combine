@@ -1164,23 +1164,6 @@
 							]
 						},
 						{
-							"__identifier": "PlayerBlob",
-							"__grid": [0,29],
-							"__pivot": [0.5,1],
-							"__tags": [ "player", "moves" ],
-							"__tile": { "tilesetUid": 38, "x": 0, "y": 0, "w": 64, "h": 64 },
-							"__smartColor": "#E850D4",
-							"iid": "203462b0-02f0-11ed-8a14-795a79f300d8",
-							"width": 64,
-							"height": 64,
-							"defUid": 4,
-							"px": [16,960],
-							"fieldInstances": [
-								{ "__identifier": "FlippedX", "__value": true, "__type": "Bool", "__tile": null, "defUid": 41, "realEditorValues": [] },
-								{ "__identifier": "FlippedY", "__value": false, "__type": "Bool", "__tile": null, "defUid": 72, "realEditorValues": [] }
-							]
-						},
-						{
 							"__identifier": "InfoSign",
 							"__grid": [3,29],
 							"__pivot": [0.5,1],
@@ -1210,6 +1193,23 @@
 							"defUid": 42,
 							"px": [862,528],
 							"fieldInstances": [{ "__identifier": "Reached", "__value": false, "__type": "Bool", "__tile": null, "defUid": 44, "realEditorValues": [] }]
+						},
+						{
+							"__identifier": "PlayerBlob",
+							"__grid": [1,29],
+							"__pivot": [0.5,1],
+							"__tags": [ "player", "moves" ],
+							"__tile": { "tilesetUid": 38, "x": 0, "y": 0, "w": 64, "h": 64 },
+							"__smartColor": "#E850D4",
+							"iid": "ee163de0-02f0-11ed-8a14-b973ba41bc29",
+							"width": 64,
+							"height": 64,
+							"defUid": 4,
+							"px": [35,960],
+							"fieldInstances": [
+								{ "__identifier": "FlippedX", "__value": true, "__type": "Bool", "__tile": null, "defUid": 41, "realEditorValues": [null] },
+								{ "__identifier": "FlippedY", "__value": false, "__type": "Bool", "__tile": null, "defUid": 72, "realEditorValues": [] }
+							]
 						}
 					]
 				},
