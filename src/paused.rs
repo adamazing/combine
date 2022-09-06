@@ -1,8 +1,12 @@
-use leafwing_input_manager::prelude::*;
-use iyes_loopless::prelude::*;
 use bevy::prelude::*;
+use iyes_loopless::prelude::*;
+use leafwing_input_manager::prelude::*;
 
-use crate::{statemanagement::{PauseState, GameState}, helpers::despawn_entities_with, assets::FontAssets};
+use crate::{
+    assets::FontAssets,
+    helpers::despawn_entities_with,
+    statemanagement::{GameState, PauseState},
+};
 
 pub struct PausePlugin;
 
@@ -10,10 +14,15 @@ impl Plugin for PausePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(InputManagerPlugin::<PauseMenuAction>::default())
             .add_enter_system(PauseState::Paused, spawn_pause_menu)
-            .add_exit_system(PauseState::Paused, despawn_entities_with::<PauseMenuItem>)
+            .add_exit_system(
+                PauseState::Paused,
+                despawn_entities_with::<PauseMenuItem>,
+            )
             .add_startup_system(spawn_pause_menu_detector)
             .add_system(exit_game.run_in_state(PauseState::Paused))
-            .add_system(change_pause_state.run_in_state(GameState::GamePlaying));
+            .add_system(
+                change_pause_state.run_in_state(GameState::GamePlaying),
+            );
     }
 }
 
@@ -24,7 +33,7 @@ struct PauseMenuItem;
 enum PauseMenuAction {
     Close,
     ExitGame,
-    Open
+    Open,
 }
 
 fn spawn_pause_menu(mut commands: Commands, font_assets: Res<FontAssets>) {
@@ -120,27 +129,40 @@ fn spawn_pause_menu(mut commands: Commands, font_assets: Res<FontAssets>) {
 fn spawn_pause_menu_detector(mut commands: Commands) {
     commands.spawn_bundle(InputManagerBundle {
         input_map: InputMap::new([
-                                 (KeyCode::Escape, PauseMenuAction::Open),
-                                 (KeyCode::Return, PauseMenuAction::Close),
-                                 (KeyCode::Q, PauseMenuAction::ExitGame),
+            (KeyCode::Escape, PauseMenuAction::Open),
+            (KeyCode::Return, PauseMenuAction::Close),
+            (KeyCode::Q, PauseMenuAction::ExitGame),
         ]),
         action_state: ActionState::default(),
     });
 }
 
-fn exit_game(action_query: Query<&ActionState<PauseMenuAction>>, current_state: Res<CurrentState<PauseState>>) {
+fn exit_game(
+    action_query: Query<&ActionState<PauseMenuAction>>,
+    current_state: Res<CurrentState<PauseState>>,
+) {
     for action in &action_query {
-        if action.pressed(PauseMenuAction::ExitGame) && matches!(current_state.0, PauseState::Paused) {
+        if action.pressed(PauseMenuAction::ExitGame)
+            && matches!(current_state.0, PauseState::Paused)
+        {
             std::process::exit(0);
         }
     }
 }
 
-fn change_pause_state(mut commands: Commands, action_query: Query<&ActionState<PauseMenuAction>>, current_state: Res<CurrentState<PauseState>>) {
+fn change_pause_state(
+    mut commands: Commands,
+    action_query: Query<&ActionState<PauseMenuAction>>,
+    current_state: Res<CurrentState<PauseState>>,
+) {
     for action in &action_query {
-        if action.pressed(PauseMenuAction::Close) && matches!(current_state.0, PauseState::Paused) {
+        if action.pressed(PauseMenuAction::Close)
+            && matches!(current_state.0, PauseState::Paused)
+        {
             commands.insert_resource(NextState(PauseState::UnPaused));
-        } else if action.pressed(PauseMenuAction::Open) && matches!(current_state.0, PauseState::UnPaused) {
+        } else if action.pressed(PauseMenuAction::Open)
+            && matches!(current_state.0, PauseState::UnPaused)
+        {
             commands.insert_resource(NextState(PauseState::Paused))
         }
     }

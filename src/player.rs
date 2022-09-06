@@ -1,13 +1,16 @@
 use std::collections::{HashMap, HashSet};
 
 use bevy_inspector_egui::Inspectable;
-use leafwing_input_manager::prelude::*;
 use heron::prelude::*;
+use leafwing_input_manager::prelude::*;
 
+use crate::{
+    platforms::Wall,
+    statemanagement::{GameState, PauseState},
+};
 use bevy::prelude::*;
-use iyes_loopless::prelude::ConditionSet;
 use bevy_ecs_ldtk::prelude::*;
-use crate::statemanagement::{GameState, PauseState};
+use iyes_loopless::prelude::{AppLooplessStateExt, ConditionSet};
 
 pub struct PlayerPlugin;
 
@@ -17,29 +20,21 @@ impl Plugin for PlayerPlugin {
         app.add_plugin(InputManagerPlugin::<PlayerAction>::default())
             .add_system(pause_physics_during_load)
             .add_system(spawn_wall_collision)
-            .add_system(movement)
             .add_system(spawn_ground_sensor)
             .add_system(ground_detection)
+            .add_system_set(
+                ConditionSet::new()
+                    .run_in_state(GameState::GamePlaying)
+                    .run_not_in_state(PauseState::Paused)
+                    .with_system(movement)
+                    .into(),
+            )
+            .add_enter_system(PauseState::Paused, pause_physics)
+            .add_exit_system(PauseState::Paused, unpause_physics)
             .add_system(restart_level)
             .register_ldtk_entity::<PlayerBundle>("PlayerBlob")
             .register_ldtk_entity::<GoalBundle>("LevelGoal")
-            .register_ldtk_entity::<FrogBundle>("Frog")
-            .register_ldtk_entity::<BatBundle>("Bat")
-            .register_ldtk_entity::<SpiderBundle>("Spider")
-            .register_ldtk_entity::<InfoSignBundle>("InfoSign")
-            // .register_ldtk_int_cell::<PlatformBundle>(1)
-            .register_ldtk_int_cell::<InvisibleWallBundle>(3)
-            // .register_ldtk_int_cell::<SpikeBundle>(4)
-            .register_ldtk_int_cell::<LadderBundle>(5)
-            .register_ldtk_int_cell::<WallBundle>(6)
-            .register_ldtk_int_cell::<LadderBundle>(7)
-            .add_system_set(
-                ConditionSet::new()
-                .run_in_state(GameState::GamePlaying)
-                .run_not_in_state(PauseState::Paused)
-                .into(),
-                )
-            ;
+            .register_ldtk_entity::<InfoSignBundle>("InfoSign");
     }
 }
 
@@ -49,18 +44,6 @@ pub struct LevelGoal;
 #[derive(Bundle, Component, Default, LdtkEntity)]
 struct GoalBundle {
     goal: LevelGoal,
-
-    #[bundle]
-    #[sprite_sheet_bundle]
-    sprite_bundle: SpriteSheetBundle,
-}
-
-#[derive(Component, Default, Debug, Inspectable)]
-pub struct Spider;
-
-#[derive(Bundle, Component, Default, LdtkEntity)]
-struct SpiderBundle {
-    spider: Spider,
 
     #[bundle]
     #[sprite_sheet_bundle]
@@ -79,61 +62,11 @@ struct InfoSignBundle {
     sprite_bundle: SpriteSheetBundle,
 }
 
-#[derive(Component, Default, Debug, Inspectable)]
-pub struct Frog;
-
-#[derive(Bundle, Component, Default, LdtkEntity)]
-struct FrogBundle {
-    frog: Frog,
-
-    #[bundle]
-    #[sprite_sheet_bundle]
-    sprite_bundle: SpriteSheetBundle,
-}
-
-#[derive(Component, Default, Debug, Inspectable)]
-pub struct Bat;
-
-#[derive(Bundle, Component, Default, LdtkEntity)]
-struct BatBundle {
-    bat: Bat,
-
-    #[bundle]
-    #[sprite_sheet_bundle]
-    sprite_bundle: SpriteSheetBundle,
-}
-
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Default, Component)]
-pub struct Wall;
-
-#[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
-pub struct WallBundle {
-    wall: Wall,
-}
-
-#[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
-pub struct InvisibleWallBundle {
-    wall: Wall
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Default, Component)]
-pub struct Climbable;
-
-#[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
-pub struct LadderBundle {
-    #[from_int_grid_cell]
-    #[bundle]
-    pub collider_bundle: ColliderBundle,
-    pub climbable: Climbable,
-}
-
 #[derive(Clone, Eq, PartialEq, Debug, Default, Component)]
 pub struct Climber {
     pub climbing: bool,
     pub intersecting_climbables: HashSet<Entity>,
 }
-
 
 #[derive(Component, Default, Debug, Inspectable)]
 pub struct Player;
@@ -152,19 +85,24 @@ struct PlayerBundle {
 
     #[bundle]
     input_manager: PlayerInput,
+
+    #[worldly]
+    pub worldly: Worldly,
+    pub climber: Climber,
+    pub ground_detection: GroundDetection,
 }
 
 #[derive(Actionlike, PartialEq, Eq, Hash, Clone, Copy, Debug)]
-enum PlayerAction {
+pub enum PlayerAction {
     Up,
     Down,
     Left,
     Right,
-    Jump
+    Jump,
 }
 
 #[derive(Bundle)]
-struct PlayerInput {
+pub struct PlayerInput {
     #[bundle]
     input_manager: InputManagerBundle<PlayerAction>,
 }
@@ -187,7 +125,7 @@ impl Default for PlayerInput {
                     (KeyCode::Space, Jump),
                 ]),
                 ..default()
-            }
+            },
         }
     }
 }
@@ -207,10 +145,7 @@ impl From<EntityInstance> for ColliderBundle {
 
         match entity_instance.identifier.as_ref() {
             "PlayerBlob" => ColliderBundle {
-                collider: CollisionShape::Cuboid {
-                    half_extends: Vec3::new(32., 32., 0.),
-                    border_radius: Some(1.0),
-                },
+                collider: CollisionShape::Sphere { radius: 20. },
                 rigid_body: RigidBody::Dynamic,
                 rotation_constraints,
                 ..Default::default()
@@ -247,6 +182,7 @@ impl From<IntGridCell> for ColliderBundle {
     fn from(int_grid_cell: IntGridCell) -> ColliderBundle {
         let rotation_constraints = RotationConstraints::lock();
 
+        info!("{:?}", int_grid_cell);
         if int_grid_cell.value == 1 || int_grid_cell.value == 7 {
             ColliderBundle {
                 collider: CollisionShape::Cuboid {
@@ -274,7 +210,10 @@ pub struct GroundSensor {
     pub intersecting_ground_entities: HashSet<Entity>,
 }
 
-fn pause_physics_during_load(mut level_events: EventReader<LevelEvent>, mut physics_time: ResMut<PhysicsTime>){
+fn pause_physics_during_load(
+    mut level_events: EventReader<LevelEvent>,
+    mut physics_time: ResMut<PhysicsTime>,
+) {
     for event in level_events.iter() {
         match event {
             LevelEvent::SpawnTriggered(_) => physics_time.set_scale(0.),
@@ -284,38 +223,74 @@ fn pause_physics_during_load(mut level_events: EventReader<LevelEvent>, mut phys
     }
 }
 
+fn pause_physics(mut physics_time: ResMut<PhysicsTime>) {
+    physics_time.set_scale(0.);
+}
 
-pub fn movement(
-    input: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Velocity, &mut Climber, &GroundDetection), With<Player>>,
+fn unpause_physics(mut physics_time: ResMut<PhysicsTime>) {
+    physics_time.set_scale(1.);
+}
+
+fn movement(
+    mut query: Query<
+        (
+            &mut Velocity,
+            &mut Climber,
+            &GroundDetection,
+            &mut ActionState<PlayerAction>,
+        ),
+        (With<Player>, Changed<ActionState<PlayerAction>>),
+    >,
 ) {
-    info!("Movement");
-    for (mut velocity, mut climber, ground_detection) in query.iter_mut() {
-        let right = if input.pressed(KeyCode::D) { 1. } else { 0. };
-        let left = if input.pressed(KeyCode::A) { 1. } else { 0. };
+    debug!("Movement");
+    for (mut velocity, mut climber, ground_detection, action_state) in
+        query.iter_mut()
+    {
+        // info!("In query loop");
+        let right = if action_state.pressed(PlayerAction::Right) {
+            1.
+        } else {
+            0.
+        };
+        let left = if action_state.pressed(PlayerAction::Left) {
+            1.
+        } else {
+            0.
+        };
 
         velocity.linear.x = (right - left) * 200.;
 
         if climber.intersecting_climbables.is_empty() {
             climber.climbing = false;
-        } else if input.just_pressed(KeyCode::W) || input.just_pressed(KeyCode::S) {
+        } else if action_state.pressed(PlayerAction::Up)
+            || action_state.pressed(PlayerAction::Down)
+        {
             climber.climbing = true;
         }
 
         if climber.climbing {
-            let up = if input.pressed(KeyCode::W) { 1. } else { 0. };
-            let down = if input.pressed(KeyCode::S) { 1. } else { 0. };
+            let up = if action_state.pressed(PlayerAction::Up) {
+                1.
+            } else {
+                0.
+            };
+            let down = if action_state.pressed(PlayerAction::Down) {
+                1.
+            } else {
+                0.
+            };
 
             velocity.linear.y = (up - down) * 200.;
         }
 
-        if input.just_pressed(KeyCode::Space) && (ground_detection.on_ground || climber.climbing) {
-            velocity.linear.y = 450.;
+        if action_state.pressed(PlayerAction::Jump)
+            && (ground_detection.on_ground || climber.climbing)
+        {
+            velocity.linear.y = 250.;
             climber.climbing = false;
         }
     }
 }
-
 
 /// Spawns heron collisions for the walls of a level
 ///
@@ -364,7 +339,8 @@ pub fn spawn_wall_collision(
     // This has two consequences in the resulting collision entities:
     // 1. it forces the walls to be split along level boundaries
     // 2. it lets us easily add the collision entities as children of the appropriate level entity
-    let mut level_to_wall_locations: HashMap<Entity, HashSet<GridCoords>> = HashMap::new();
+    let mut level_to_wall_locations: HashMap<Entity, HashSet<GridCoords>> =
+        HashMap::new();
 
     wall_query.for_each(|(&grid_coords, parent)| {
         // An intgrid tile's direct parent will be a layer entity, not the level entity
@@ -373,14 +349,16 @@ pub fn spawn_wall_collision(
         if let Ok(grandparent) = parent_query.get(parent.get()) {
             level_to_wall_locations
                 .entry(grandparent.get())
-                .or_insert(HashSet::new())
+                .or_insert_with(HashSet::new)
                 .insert(grid_coords);
         }
     });
 
     if !wall_query.is_empty() {
         level_query.for_each(|(level_entity, level_handle)| {
-            if let Some(level_walls) = level_to_wall_locations.get(&level_entity) {
+            if let Some(level_walls) =
+                level_to_wall_locations.get(&level_entity)
+            {
                 let level = levels
                     .get(level_handle)
                     .expect("Level should be loaded by this point");
@@ -406,7 +384,10 @@ pub fn spawn_wall_collision(
                     // + 1 to the width so the algorithm "terminates" plates that touch the right
                     // edge
                     for x in 0..width + 1 {
-                        match (plate_start, level_walls.contains(&GridCoords { x, y })) {
+                        match (
+                            plate_start,
+                            level_walls.contains(&GridCoords { x, y }),
+                        ) {
                             (Some(s), false) => {
                                 row_plates.push(Plate {
                                     left: s,
@@ -431,9 +412,12 @@ pub fn spawn_wall_collision(
                 plate_stack.push(Vec::new());
 
                 for (y, row) in plate_stack.iter().enumerate() {
-                    let mut current_rects: HashMap<Plate, Rect> = HashMap::new();
+                    let mut current_rects: HashMap<Plate, Rect> =
+                        HashMap::new();
                     for plate in row {
-                        if let Some(previous_rect) = previous_rects.remove(plate) {
+                        if let Some(previous_rect) =
+                            previous_rects.remove(plate)
+                        {
                             current_rects.insert(
                                 *plate,
                                 Rect {
@@ -455,7 +439,9 @@ pub fn spawn_wall_collision(
                     }
 
                     // Any plates that weren't removed above have terminated
-                    wall_rects.append(&mut previous_rects.values().copied().collect());
+                    wall_rects.append(
+                        &mut previous_rects.values().copied().collect(),
+                    );
                     previous_rects = current_rects;
                 }
 
@@ -469,10 +455,14 @@ pub fn spawn_wall_collision(
                             .spawn()
                             .insert(CollisionShape::Cuboid {
                                 half_extends: Vec3::new(
-                                    (wall_rect.right as f32 - wall_rect.left as f32 + 1.)
+                                    (wall_rect.right as f32
+                                        - wall_rect.left as f32
+                                        + 1.)
                                         * grid_size as f32
                                         / 2.,
-                                    (wall_rect.top as f32 - wall_rect.bottom as f32 + 1.)
+                                    (wall_rect.top as f32
+                                        - wall_rect.bottom as f32
+                                        + 1.)
                                         * grid_size as f32
                                         / 2.,
                                     0.,
@@ -485,9 +475,11 @@ pub fn spawn_wall_collision(
                                 ..Default::default()
                             })
                             .insert(Transform::from_xyz(
-                                (wall_rect.left + wall_rect.right + 1) as f32 * grid_size as f32
+                                (wall_rect.left + wall_rect.right + 1) as f32
+                                    * grid_size as f32
                                     / 2.,
-                                (wall_rect.bottom + wall_rect.top + 1) as f32 * grid_size as f32
+                                (wall_rect.bottom + wall_rect.top + 1) as f32
+                                    * grid_size as f32
                                     / 2.,
                                 0.,
                             ))
@@ -501,7 +493,10 @@ pub fn spawn_wall_collision(
 
 pub fn spawn_ground_sensor(
     mut commands: Commands,
-    detect_ground_for: Query<(Entity, &CollisionShape, &Transform), Added<GroundDetection>>,
+    detect_ground_for: Query<
+        (Entity, &CollisionShape, &Transform),
+        Added<GroundDetection>,
+    >,
 ) {
     for (entity, shape, transform) in detect_ground_for.iter() {
         if let CollisionShape::Cuboid { half_extends, .. } = shape {
@@ -510,7 +505,31 @@ pub fn spawn_ground_sensor(
                 border_radius: None,
             };
 
-            let sensor_translation = Vec3::new(0., -half_extends.y, 0.) / transform.scale;
+            let sensor_translation =
+                Vec3::new(0., -half_extends.y, 0.) / transform.scale;
+
+            commands.entity(entity).with_children(|builder| {
+                builder
+                    .spawn()
+                    .insert(RigidBody::Sensor)
+                    .insert(detector_shape)
+                    .insert(Transform::from_translation(sensor_translation))
+                    .insert(GlobalTransform::default())
+                    .insert(GroundSensor {
+                        ground_detection_entity: entity,
+                        intersecting_ground_entities: HashSet::new(),
+                    });
+            });
+        } else if let CollisionShape::Sphere { radius } = shape {
+            info!("{:?}", radius);
+
+            let detector_shape = CollisionShape::Cuboid {
+                half_extends: Vec3::new(radius / 2., 2., 0.),
+                border_radius: None,
+            };
+
+            let sensor_translation =
+                Vec3::new(0., -radius, 0.) / transform.scale;
 
             commands.entity(entity).with_children(|builder| {
                 builder
@@ -537,21 +556,23 @@ pub fn ground_detection(
     for (entity, mut ground_sensor) in ground_sensors.iter_mut() {
         for collision in collisions.iter() {
             match collision {
-                CollisionEvent::Started(a, b) => match rigid_bodies.get(b.rigid_body_entity()) {
-                    Ok(RigidBody::Sensor) => {
-                        // don't consider sensors to be "the ground"
-                    }
-                    Ok(_) => {
-                        if a.rigid_body_entity() == entity {
-                            ground_sensor
-                                .intersecting_ground_entities
-                                .insert(b.rigid_body_entity());
+                CollisionEvent::Started(a, b) => {
+                    match rigid_bodies.get(b.rigid_body_entity()) {
+                        Ok(RigidBody::Sensor) => {
+                            // don't consider sensors to be "the ground"
+                        }
+                        Ok(_) => {
+                            if a.rigid_body_entity() == entity {
+                                ground_sensor
+                                    .intersecting_ground_entities
+                                    .insert(b.rigid_body_entity());
+                            }
+                        }
+                        Err(_) => {
+                            panic!("If there's a collision, there should be an entity")
                         }
                     }
-                    Err(_) => {
-                        panic!("If there's a collision, there should be an entity")
-                    }
-                },
+                }
                 CollisionEvent::Stopped(a, b) => {
                     if a.rigid_body_entity() == entity {
                         ground_sensor
@@ -565,7 +586,8 @@ pub fn ground_detection(
         if let Ok(mut ground_detection) =
             ground_detectors.get_mut(ground_sensor.ground_detection_entity)
         {
-            ground_detection.on_ground = ground_sensor.intersecting_ground_entities.len() > 0;
+            ground_detection.on_ground =
+                !ground_sensor.intersecting_ground_entities.is_empty();
         }
     }
 }
@@ -581,4 +603,3 @@ pub fn restart_level(
         }
     }
 }
-
