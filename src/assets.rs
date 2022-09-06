@@ -1,7 +1,7 @@
-use bevy_kira_audio::AudioSource;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_ecs_ldtk::LdtkAsset;
+use bevy_kira_audio::AudioSource;
 
 use crate::statemanagement::GameState;
 
@@ -16,7 +16,7 @@ impl Plugin for AssetPlugin {
                 .with_collection::<AudioAssets>()
                 .with_collection::<FontAssets>()
                 .continue_to_state(GameState::GamePlaying),
-            );
+        );
     }
 
     fn name(&self) -> &str {
@@ -31,9 +31,9 @@ pub struct FontAssets {
 }
 
 #[derive(AssetCollection)]
-pub struct AudioAssets{
+pub struct AudioAssets {
     #[asset(path = "audio/music/joshua-mclean_50s-bit.ogg")]
-    pub music: Handle<AudioSource>,
+    pub game_music: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection)]

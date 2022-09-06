@@ -1,12 +1,13 @@
+#![allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GameState {
     MainMenu,
     Loading,
-    GamePlaying
+    GamePlaying,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PauseState {
     Paused,
-    UnPaused
+    UnPaused,
 }

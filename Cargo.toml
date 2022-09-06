@@ -22,7 +22,6 @@ lto = true
 
 [dependencies]
 bevy = { version = "0.8.0", default-features = false, features = [ "render", "animation", "bevy_asset", "bevy_scene", "bevy_winit", "bevy_gilrs", "png", "hdr", "filesystem_watcher", "x11" ] }
-bevy_rapier2d = "0.16.1"
 image = "0.24.3"
 winit = "0.26.1"
 bevy-inspector-egui = "0.12.1"
@@ -32,3 +31,4 @@ bevy_kira_audio = { version = "0.12.0", default-features = false, features = ["o
 iyes_loopless = {  version = "0.7.1", features = ["states"] }
 leafwing-input-manager = "0.5.2"
 bevy_asset_loader = { version = "0.12.1", features = ["stageless"] }
+heron = { version = "4.0.0", features = ["collision-from-mesh", "2d", "debug-2d"] }
